@@ -2,4 +2,7 @@ START
 ==========
 1. Install python3
 2. install dependencies with pip3 install -r requirements.txt
-3. Run with python  web.py
+3. Run with python  web.py( by default runs on port 8888)
+For custom port run with `python web.py --port <new_port>`
+
+
