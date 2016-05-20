@@ -8,18 +8,22 @@ import sys
 import tornado
 import tornado.httpserver
 from tornado.options import define, options
-from tornado.web import RequestHandler, Application
+from tornado.web import RequestHandler, Application, asynchronous
 
 define('debug', default=1, help='hot deployment. use in dev only', type=int)
 define('port', default=8888, help='run on the given port', type=int)
 
 IMG_HASHES = 'img:hash:'
 class AntiVirusHandler(RequestHandler):
+    # for asychronous see example here .
+    # http://www.tornadoweb.org/en/stable/web.html?highlight=asynchronous#tornado.web.asynchronous
+    # @asynchronous
     def post(self):
         # Read the images
         imgBytes = self.request.files.get('file_inp')[0].body
         imgFileName = self.request.files.get('file_inp')[0].filename
         imgHash = hashlib.sha512(imgBytes).hexdigest()
+        # Store result in redis for lookup of repeat images
         imgNew = redisConn.get(IMG_HASHES + ':' + imgHash)
         r = random.random()
         if r > 0.95:
