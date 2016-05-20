@@ -1,0 +1,5 @@
+START
+==========
+1. Install python3
+2. install dependencies with pip3 install -r requirements.txt
+3. Run with python  web.py
