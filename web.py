@@ -19,24 +19,27 @@ class AntiVirusHandler(RequestHandler):
     # http://www.tornadoweb.org/en/stable/web.html?highlight=asynchronous#tornado.web.asynchronous
     # @asynchronous
     def post(self):
-        # Read the images
-        imgBytes = self.request.files.get('file_inp')[0].body
-        imgFileName = self.request.files.get('file_inp')[0].filename
-        imgHash = hashlib.sha512(imgBytes).hexdigest()
-        # Store result in redis for lookup of repeat images
-        imgNew = redisConn.get(IMG_HASHES + ':' + imgHash)
-        r = random.random()
-        if r > 0.95:
-            self.set_status(503)
-            self.finish()
-        if imgNew:
-            result = True  if r < 0.2 else False
-            redisConn.set(IMG_HASHES + ':' + imgHash, result)
+        force = self.get_arguments('force', None)
+        if not force:
+            # Read the images
+            imgBytes = self.request.files.get('file_inp')[0].body
+            imgFileName = self.request.files.get('file_inp')[0].filename
+            imgHash = hashlib.sha512(imgBytes).hexdigest()
+            # Store result in redis for lookup of repeat images
+            imgNew = redisConn.get(IMG_HASHES + ':' + imgHash)
+            r = random.random()
+            if r > 0.95:
+                self.set_status(503)
+                self.finish()
+            if imgNew:
+                result = True  if r < 0.2 else False
+                redisConn.set(IMG_HASHES + ':' + imgHash, result)
+            else:
+                result = redisConn.get(IMG_HASHES + ':' + imgHash)
+            self.set_status(200)
+            self.finish({'valid': result })
         else:
-            result = redisConn.get(IMG_HASHES + ':' + imgHash)
-        self.set_status(200)
-        self.finish({'valid': result })
-
+            self.finish({ 'valid': force })
 class Application(Application):
     def __init__(self):
         redisConn = redis.Redis(host='127.0.0.1',
